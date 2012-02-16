@@ -1,30 +1,10 @@
 <?php
 
 /**
- * Implements hook_block_info().
+ * Implements hook_ctools_plugin_directory().
  */
-function ding_listsearch_block_info() {
-  $blocks['list'] = array(
-    'info' => t('List search'),
-    'visibility' => BLOCK_VISIBILITY_NOTLISTED,
-  );
-  return $blocks;
-}
-
-/**
- * Implements hook_block_view().
- */
-function ding_listsearch_block_view($delta) {
-  switch ($delta) {
-    case 'list':
-      $block['subject'] = 'Search recommendations';
-      $block['content'] = '
-        <ul>
-          <li><a href="/search/ting/dc.creator=Dorthe">Dorthe nors</a></li>
-          <li><a href="/search/ting/dc.creator=Tolkien">Tolkien</a></li>
-        </ul>
-      ';
-      break;
+function ding_listsearch_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'ctools' && !empty($plugin)) {
+    return "plugins/$plugin";
   }
-  return $block;
 }
