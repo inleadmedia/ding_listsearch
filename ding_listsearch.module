@@ -1,2 +1,30 @@
 <?php
 
+/**
+ * Implements hook_block_info().
+ */
+function ding_listsearch_block_info() {
+  $blocks['list'] = array(
+    'info' => t('List search'),
+    'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function ding_listsearch_block_view($delta) {
+  switch ($delta) {
+    case 'list':
+      $block['subject'] = 'Search recommendations';
+      $block['content'] = '
+        <ul>
+          <li><a href="/search/ting/dc.creator=Dorthe">Dorthe nors</a></li>
+          <li><a href="/search/ting/dc.creator=Tolkien">Tolkien</a></li>
+        </ul>
+      ';
+      break;
+  }
+  return $block;
+}
