@@ -3,11 +3,16 @@
 /**
  * Implements hook_theme().
  */
-function ding_listsearch_theme() {
+function ding_listsearch_theme($existing, $type, $theme, $path) {
   $hooks = array(
     'listsearch_form_items' => array(
       'render element' => 'form',
     ),
+    'ding_list_search_items' => array(
+      'variables' => array('items' => NULL),
+      'template' => 'ding_list_search_items',
+      'path'  => $path . '/theme',
+    )
   );
   return $hooks;
 }
