@@ -27,39 +27,3 @@ function ding_listsearch_list_search_content_type_render($subtype, $conf, $panel
   ';
   return $block;
 }
-
-/**
- * Returns an edit form for the content type.
- */
-function ding_listsearch_list_search_content_type_edit_form($form, &$form_state) {
-  $form['searches'] = array(
-    '#type' => 'fieldset',
-    '#tree' => TRUE,
-  );
-  $form['searches'][] = _ding_listsearch_list_search_item_form($form, $form_state);
-  return $form;
-}
-
-function _ding_listsearch_list_search_item_form($form, &$form_state) {
-  $form = array(
-    '#type' => 'fieldset',
-  );
-  $form['title'] = array(
-    '#type' => 'textfield',
-    '#title'=> t('Title'),
-    '#default_value' => '',
-  );
-  $form['search_params'] = array(
-    '#type' => 'textfield',
-    '#title'=> t('Search phrase'),
-    '#default_value' => '',
-  );
-  $form['weight'] = array(
-    '#type' => 'weight',
-    '#title' => t('Weight'),
-    '#title_display' => 'invisible',
-    '#default_value' => 1,
-    '#delta' => 50,
-  );
-  return $form;
-}
