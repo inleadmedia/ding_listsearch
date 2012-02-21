@@ -28,7 +28,11 @@ function ding_listsearch_list_search_content_type_render($subtype, $conf, $panel
 function ding_listsearch_list_search_content_type_sort($items) {
   $sorted_items;
   foreach ($items as $i => $item) {
-    $sorted_items[$item['weight']] = $item;
+    $weight = $item['weight'];
+    while(isset($sorted_items[$weight])) {
+      $weight++;
+    }
+    $sorted_items[$weight] = $item;
   }
   unset($items);
   ksort($sorted_items);
