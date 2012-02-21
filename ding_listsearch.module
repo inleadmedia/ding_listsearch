@@ -35,13 +35,15 @@ function ding_listsearch_list_search_content_type_edit_form($form, &$form_state)
     '#theme' => 'listsearch_form_items',
     '#tree' => TRUE,
   );
+  $max_item_weight = 0;
   if (is_array($form_state['conf']['searches'])) {
     foreach ($form_state['conf']['searches'] as $i => $search_values) {
       $search_values['index'] = $i;
       $form['searches'][] = _ding_listsearch_list_search_item_form($form, $form_state, $search_values);
+      $max_item_weight = ($search_values['weight'] > $max_item_weight) ? $search_values['weight'] : $max_item_weight;
     }
   }
-  $form['searches'][] = _ding_listsearch_list_search_item_form($form, $form_state);
+  $form['searches'][] = _ding_listsearch_list_search_item_form($form, $form_state, array('weight' => $max_item_weight + 1));
 
   $form['add_row'] = array(
     '#type' => 'submit',
