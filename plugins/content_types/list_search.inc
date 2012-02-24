@@ -17,13 +17,24 @@ $plugin = array(
  * Render the block.
  */
 function ding_listsearch_list_search_content_type_render($subtype, $conf, $panel_args, $context) {
+  // Sort by weight.
+  $conf['searches'] = ding_listsearch_list_search_content_type_sort($conf['searches']);
   $block          = new stdClass();
   $block->title   = t('Search recommendations');
-  $block->content = '
-    <ul>
-      <li><a href="/search/ting/dc.creator=Dorthe">Dorthe nors</a></li>
-      <li><a href="/search/ting/dc.creator=Tolkien">Tolkien</a></li>
-    </ul>
-  ';
+  $block->content = theme('ding_list_search_items', array('items' => $conf['searches']));
   return $block;
+}
+
+function ding_listsearch_list_search_content_type_sort($items) {
+  $sorted_items;
+  foreach ($items as $i => $item) {
+    $weight = $item['weight'];
+    while(isset($sorted_items[$weight])) {
+      $weight++;
+    }
+    $sorted_items[$weight] = $item;
+  }
+  unset($items);
+  ksort($sorted_items);
+  return $sorted_items;
 }
