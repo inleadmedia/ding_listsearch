@@ -1,2 +1,186 @@
 <?php
 
+/**
+ * Implements hook_theme().
+ */
+function ding_listsearch_theme() {
+  $hooks = array(
+    'listsearch_form_items' => array(
+      'render element' => 'form',
+    ),
+  );
+  return $hooks;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function ding_listsearch_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'ctools' && !empty($plugin)) {
+    return "plugins/$plugin";
+  }
+}
+
+/**
+ * Ctools plugin functions.
+ */
+
+/**
+ * Returns an edit form for the content type.
+ */
+function ding_listsearch_list_search_content_type_edit_form($form, &$form_state) {
+  $form['searches'] = array(
+    '#prefix' => '<div id="listsearch-items">',
+    '#suffix' => '</div>',
+    '#theme' => 'listsearch_form_items',
+    '#tree' => TRUE,
+  );
+  $max_item_weight = 0;
+  if (is_array($form_state['conf']['searches'])) {
+    foreach ($form_state['conf']['searches'] as $i => $search_values) {
+      $search_values['index'] = $i;
+      $form['searches'][] = _ding_listsearch_list_search_item_form($form, $form_state, $search_values);
+      $max_item_weight = ($search_values['weight'] > $max_item_weight) ? $search_values['weight'] : $max_item_weight;
+    }
+  }
+  $form['searches'][] = _ding_listsearch_list_search_item_form($form, $form_state, array('weight' => $max_item_weight + 1));
+
+  $form['add_row'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add row'),
+    '#submit' => array('ding_listsearch_list_search_add_row_submit'),
+    '#ajax' => array(
+      'wrapper' => 'listsearch-items',
+      'callback' => 'ding_listsearch_js',
+      'method' => 'replace',
+      'effect' => 'fade'
+    ),
+  );
+
+  return $form;
+}
+
+/**
+ * Content type settings validate handler.
+ */
+function ding_listsearch_list_search_content_type_edit_form_validate($form, &$form_state) {
+  foreach ($form_state['values']['searches'] as $k => &$item) {
+    // Remove items with empty fields.
+    if (empty($item['title']) && empty($item['search_params'])) {
+      unset($form_state['values']['searches'][$k]);
+    }
+    else {
+      // Valdate fields.
+      if (empty($item['title'])) {
+        form_set_error('searches][' . $k . '][title', t('Title is empty'));
+      }
+      if (empty($item['search_params'])) {
+        form_set_error('searches][' . $k . '][search_params', t('Search phrase is empty'));
+      }
+    }
+  }
+}
+
+/**
+ * Content type settings submit handler.
+ */
+function ding_listsearch_list_search_content_type_edit_form_submit($form, &$form_state) {
+  // Save data.
+  $form_state['conf']['searches'] = $form_state['values']['searches'];
+}
+
+/**
+ * Adds item row to the form.
+ */
+function ding_listsearch_list_search_add_row_submit(&$form, &$form_state) {
+  if ($form_state['values']['op'] == $form_state['values']['add_row']) {
+    // Save form data.
+    ding_listsearch_list_search_content_type_edit_form_submit($form, $form_state);
+    // Rebuild form.
+    $form_state['rebuild'] = TRUE;
+  }
+}
+
+/**
+ * Build form element for a search item.
+ */
+function _ding_listsearch_list_search_item_form($form, &$form_state, $item_values = NULL) {
+  $form = array(
+    '#type' => 'fieldset',
+    '#weight' => isset($item_values['weight']) ? $item_values['weight'] : 0,
+  );
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title'=> t('Title'),
+    '#default_value' => isset($item_values['title']) ? $item_values['title'] : '',
+  );
+  $form['search_params'] = array(
+    '#type' => 'textfield',
+    '#title'=> t('Search phrase'),
+    '#default_value' => isset($item_values['search_params']) ? $item_values['search_params'] : '',
+  );
+  $form['weight'] = array(
+    '#type' => 'weight',
+    '#title' => t('Weight'),
+    '#title_display' => 'invisible',
+    '#default_value' => isset($item_values['weight']) ? $item_values['weight'] : 0,
+    '#delta' => 50,
+  );
+  $form['delete_row'] = array(
+    '#markup' => isset($item_values['title']) ? l(t('Delete'), '', array('attributes' => array('class' => 'delete-row-link'))) : '',
+  );
+  return $form;
+}
+
+/**
+ * Ajax callback.
+ */
+function ding_listsearch_js($form, &$form_state) {
+  return $form['searches'];
+}
+
+/**
+ * Theme form items as draggable rows.
+ */
+function theme_listsearch_form_items($variables) {
+  $form = &$variables['form'];
+  $i = 0;
+
+  drupal_add_tabledrag('listsearch-items-table', 'order', 'sibling', 'item-weight');
+  drupal_add_js(drupal_get_path('module', 'ding_listsearch') . '/js/ding_listsearch_content_type.js', 'file');
+
+  // Build table header.
+  $headers = array('');
+  $first_element_key = reset(element_children($form));
+  foreach (element_children($form[$first_element_key]) as $field_key) {
+    $headers[] = $form[$first_element_key][$field_key]['#title'];
+  }
+
+  // Build table rows.
+  $rows = array();
+  foreach (element_children($form) as $key) {
+    $i++;
+    // Build table row.
+    $row = array('data' => array('class' => array('choice-flag')));
+    foreach (element_children($form[$key]) as $field_key) {
+      if ($field_key == 'weight') {
+        $form[$key][$field_key]['#attributes']['class'] = array('item-weight');
+      }
+      $row['data'][] = drupal_render($form[$key][$field_key]);
+      $row['class'][] = 'draggable';
+    }
+
+    drupal_render($form[$key]);
+    $rows[] = $row;
+  }
+
+  $table_config = array(
+    'header' => $headers,
+    'rows' => $rows,
+    'attributes' => array('id' => 'listsearch-items-table'),
+    'sticky' => FALSE,
+  );
+  $output = theme('table', $table_config);
+  $output .= drupal_render_children($form);
+  return $output;
+}

@@ -1,4 +1,5 @@
 core = 7.x
 description = Allows BE editors to create a list based on a search results.
+dependencies[] = ctools
 name = List search
 package = Ding!
